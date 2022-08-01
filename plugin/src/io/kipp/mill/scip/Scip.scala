@@ -38,45 +38,64 @@ object Scip extends ExternalModule {
 
     modules.foreach {
       case sm: ScalaModule =>
-        val Seq(name, scalaVersion, scalaOrganization) =
-          Evaluator.evalOrThrow(ev)(
-            Seq(sm.artifactName, sm.scalaVersion, sm.scalaOrganization)
-          )
+        val (
+          name,
+          scalaVersion,
+          scalaOrganization,
+          upstreamCompileOutput,
+          sources,
+          compileClasspath,
+          javacOptions,
+          scalacOptions,
+          compilerClasspath,
+          scalacPluginClasspath,
+          zincWorker
+        ) =
+          Evaluator.evalOrThrow(ev) {
+            T.task {
+              val name = sm.artifactId()
+              val scalaVersion = sm.scalaVersion()
+              val scalaOrganization = sm.scalaOrganization()
+              val upstreamCompileOutput = sm.upstreamCompileOutput()
+              val sources = sm.allSourceFiles().map(_.path)
+              val compileClasspath = sm.compileClasspath().map(_.path)
+              val javacOptions = sm.javacOptions()
+              val scalacOptions = sm.allScalacOptions()
 
-        log.info(
-          s"Hijacking everything needed to compile Scala module [${name}]"
-        )
+              val compilerClasspath = sm
+                .scalaCompilerClasspath()
+                .map(_.path)
 
-        val upstreamCompileOutput =
-          Evaluator.evalOrThrow(ev)(sm.upstreamCompileOutput)
+              val scalacPluginClasspath = sm
+                .scalacPluginClasspath()
+                .map(_.path)
 
-        val sources =
-          Evaluator.evalOrThrow(ev)(sm.allSourceFiles).map(_.path)
+              val zincWorker = sm.zincWorker.worker()
+              (
+                name,
+                scalaVersion,
+                scalaOrganization,
+                upstreamCompileOutput,
+                sources,
+                compileClasspath,
+                javacOptions,
+                scalacOptions,
+                compilerClasspath,
+                scalacPluginClasspath,
+                zincWorker
+              )
 
-        val compileClasspath =
-          Evaluator.evalOrThrow(ev)(sm.compileClasspath).map(_.path)
-
-        val javacOptions = Evaluator.evalOrThrow(ev)(sm.javacOptions)
-
-        val scalacOptions = Evaluator.evalOrThrow(ev)(sm.allScalacOptions)
-
-        val compilerClasspath = Evaluator
-          .evalOrThrow(ev)(sm.scalaCompilerClasspath)
-          .map(_.path)
-
-        val scalacPluginClasspath = Evaluator
-          .evalOrThrow(ev)(sm.scalacPluginClasspath)
-          .map(_.path)
-
-        log.info(
-          s"Ensuring everything needed for semanticdb version [${semanticdbVersion}] is available"
-        )
+            }
+          }
 
         val semanticdbDep: Agg[Path] =
           if (isScala3(scalaVersion)) {
             log.info("Scala 3 detected, skipping getting semanticdb plugin")
             Agg.empty
           } else {
+            log.info(
+              s"Ensuring everything needed for semanticdb version [${semanticdbVersion}] is available"
+            )
             SemanticdbFetcher.getSemanticdbPaths(ev, sm, semanticdbVersion)
           }
 
@@ -96,8 +115,6 @@ object Scip extends ExternalModule {
             "-Ystop-after:semanticdb-typer"
           )
         }
-
-        val zincWorker = Evaluator.evalOrThrow(ev)(sm.zincWorker.worker)
 
         val updatedScalacPluginClasspath =
           scalacPluginClasspath ++ semanticdbDep
@@ -124,21 +141,18 @@ object Scip extends ExternalModule {
         // dig into the issue below before enabling Java support.
         // https://github.com/com-lihaoyi/mill/issues/1983
 
-        val name = Evaluator.evalOrThrow(ev)(jm.artifactName)
-
-        // val zincWorker = Evaluator.evalOrThrow(ev)(jm.zincWorker.worker)
-
-        // val upstreamCompileOutput =
-        //  Evaluator.evalOrThrow(ev)(jm.upstreamCompileOutput)
-
-        // val sources =
-        //  Evaluator.evalOrThrow(ev)(jm.allSourceFiles).map(_.path)
-
-        // val compileClasspath =
-        //  Evaluator.evalOrThrow(ev)(jm.compileClasspath).map(_.path)
-
-        // val javacOptions =
-        //  Evaluator.evalOrThrow(ev)(jm.javacOptions)
+        val name =
+          Evaluator.evalOrThrow(ev) {
+            T.task {
+              val name = jm.artifactName()
+              // val zincWorker = jm.zincWorker.worker()
+              // val upstreamCompileOutput = jm.upstreamCompileOutput()
+              // val sources = jm.allSourceFiles().map(_.path)
+              // val compileClasspath = jm.compileClasspath().map(_.path)
+              // val javacOptions = jm.javacOptions()
+              name
+            }
+          }
 
         // val updatedCompileClasspath =
         //  compileClasspath ++ SemanticdbFetcher.getSemanticdbPaths(ev, jm)
@@ -218,9 +232,9 @@ object Scip extends ExternalModule {
       toolInfo,
       "java",
       ScipOutputFormat.TYPED_PROTOBUF,
-      true, // TODO I think this is fine??
+      true, // parallel -- this is fine
       List.empty.asJava, // TODO figure this out later
-      "" // BuildKind jvm, maven, ??? Can I just put mill here?
+      "" // BuildKind here is fine being ""
     )
 
     ScipSemanticdb.run(options)
