@@ -9,7 +9,8 @@ on [Sourcegraph](https://sourcegraph.com/).
 _An example using the [Sourcegraph browser
 extension](https://docs.sourcegraph.com/integration/browser_extension) enabling
 precise navigation on GitHub._
-![code-navigation by sourcegraph](https://i.imgur.com/nnJ7Ml8.gif)
+
+![2022-08-01 15 40 23](https://user-images.githubusercontent.com/13974112/182163135-57e504b2-7b29-42d6-8588-3da6b71b8bba.gif)
 
 You can read more about SCIP in the [announcement blog
 post](https://about.sourcegraph.com/blog/announcing-scip).
