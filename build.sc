@@ -13,6 +13,7 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
 import de.tobiasroeser.mill.integrationtest._
 import mill.scalalib.api.ZincWorkerUtil
+import scala.util.Try
 
 val millVersion = "0.10.3"
 val artifactBase = "mill-scip"
@@ -45,7 +46,7 @@ object plugin
   )
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"com.sourcegraph::scip-java:0.8.2"
+    ivy"com.sourcegraph::scip-java:$semanticdbJava"
   )
 
   override def scalacOptions =
@@ -67,7 +68,13 @@ object plugin
     "io.kipp.mill.scip"
   )
 
-  override def publishVersion = VcsVersion.vcsState().format()
+  override def publishVersion = VcsVersion
+    .vcsState()
+    .format(tagModifier = {
+      case t if t.startsWith("v") && Try(t.substring(1, 2).toInt).isSuccess =>
+        t.substring(1)
+      case t => t
+    })
 
   override def pomSettings = PomSettings(
     description = "Generate SCIP for your Mill build.",
