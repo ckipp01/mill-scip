@@ -18,8 +18,17 @@ object minimalThree extends ScalaModule {
 def generate(ev: Evaluator) = T.command {
   val scipFile = Scip.generate(ev)()
 
-  val semanticdbFiles = os.walk(os.pwd / "out").filter(_.ext == "semanticdb")
+  val classpathFile = (scipFile / os.up / "javacopts.txt")
 
+  // We make sure that the javacopts.txt file was also created
+  assertEquals(os.exists(classpathFile), true)
+
+  val firstLine = os.read(classpathFile).takeWhile(_ != '\n')
+
+  // Ensure that the contents of this file were actually created correctly starting with the first line being -classpath
+  assertEquals(firstLine, "-classpath")
+
+  val semanticdbFiles = os.walk(os.pwd / "out").filter(_.ext == "semanticdb")
   // We should find 3 different semanticdb files to show that it's working in a
   // normal Scala 2 module, the test module, and the Scala 3 module.
   assertEquals(semanticdbFiles.size, 3)
