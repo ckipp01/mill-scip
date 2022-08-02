@@ -27,7 +27,7 @@ so you don't need to add anything to your build to use it. The easiest way to
 run this against your project is by the below command:
 
 ```
-mill --import ivy:io.chris-kipp::mill-scip::0.1.1 io.kipp.mill.scip.Scip/generate
+mill --import ivy:io.chris-kipp::mill-scip::0.2.0 io.kipp.mill.scip.Scip/generate
 ```
 
 This command will generate an `index.scip` file for you located in your

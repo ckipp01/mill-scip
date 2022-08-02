@@ -58,8 +58,7 @@ object plugin
 
   override def buildInfoMembers = Map(
     "semanticDBVersion" -> semanticdb,
-    "semanticDBJavaVersion" -> semanticdbJava,
-    "version" -> publishVersion()
+    "semanticDBJavaVersion" -> semanticdbJava
   )
 
   override def buildInfoObjectName = "ScipBuildInfo"
