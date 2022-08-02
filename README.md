@@ -75,7 +75,7 @@ jobs:
           java-version: '17'
 
       - name: Generate SCIP File
-        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.1.1 io.kipp.mill.scip.Scip/generate
+        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.2.0 io.kipp.mill.scip.Scip/generate
 
       - name: Upload SCIP file
         run: |
@@ -94,10 +94,6 @@ jobs:
     can track the progress of this
     [here](https://github.com/com-lihaoyi/mill/issues/1983) as it needs to be
     addressed upstream.
-- Currently this only enables precise code navigation on Sourcegraph within your
-    repo. Support for [cross-repository
-    navigation](https://sourcegraph.github.io/scip-java/docs/manual-configuration.html#step-5-optional-enable-cross-repository-navigation)
-    is not yet done.
 
 ## How does this work?
 
