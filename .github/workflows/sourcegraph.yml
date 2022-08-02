@@ -1,0 +1,30 @@
+name: Sourcegraph
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  scip:
+    runs-on: ubuntu-latest
+    name: "Upload SCIP"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: coursier/cache-action@v6
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Generate SCIP File
+        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.2.0 io.kipp.mill.scip.Scip/generate
+
+      - name: Upload SCIP file
+        run: |
+          mkdir -p bin
+          curl -L https://sourcegraph.com/.api/src-cli/src_linux_amd64 -o bin/src
+          chmod +x bin/src
+          ./bin/src code-intel upload -trace=3 -root . -file out/io/kipp/mill/scip/Scip/generate.dest/index.scip -github-token $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
