@@ -233,8 +233,10 @@ object Scip extends ExternalModule {
     val toolInfo =
       LsifToolInfo
         .newBuilder()
-        .setName("mill-scip")
-        .setVersion(ScipBuildInfo.version)
+        .setName(
+          "scip-java"
+        ) // Make sure this stays a recognized name by src or it won't index deps. Don't use mill-scip.
+        .setVersion(ScipBuildInfo.semanticDBJavaVersion)
         .build()
 
     log.info(s"Creating a index.scip in ${scipFile}")
@@ -251,6 +253,7 @@ object Scip extends ExternalModule {
       Seq("-classpath\n", projects.mkString(":")),
       createFolders = true
     )
+
     val classPathEntries =
       projects.flatMap(project => ClasspathEntry.fromPom(project.toNIO))
 
