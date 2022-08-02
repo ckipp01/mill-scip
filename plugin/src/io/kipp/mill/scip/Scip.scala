@@ -197,8 +197,16 @@ object Scip extends ExternalModule {
 
     // TODO need to generate a dependencies.txt file
     // https://sourcegraph.github.io/scip-java/docs/manual-configuration.html#step-5-optional-enable-cross-repository-navigation
+    //
+    //
+    //
+    val projects: Seq[Path] = modules
+      .flatMap { module =>
+        Evaluator.evalOrThrow(ev)(T.task(module.resolvedIvyDeps()))
+      }
+      .map(_.path)
 
-    createScip(log, T.dest, T.workspace)
+    createScip(log, T.dest, T.workspace, projects)
     T.dest / "index.scip"
   }
 
@@ -211,8 +219,15 @@ object Scip extends ExternalModule {
     *   The destination dir that we'll stick the index in
     * @param workspace
     *   The current workspace root
+    * @param projects
+    *   Full classpath of the project to be used for cross-project navigation.
     */
-  private def createScip(log: Logger, dest: Path, workspace: Path): Unit = {
+  private def createScip(
+      log: Logger,
+      dest: Path,
+      workspace: Path,
+      projects: Seq[Path]
+  ): Unit = {
     val scipFile = dest / "index.scip"
     val reporter = new ScipReporter(log)
     val toolInfo =
@@ -224,6 +239,23 @@ object Scip extends ExternalModule {
 
     log.info(s"Creating a index.scip in ${scipFile}")
 
+    // So this is maybe a bit opinionated here, but we're only writing this to
+    // disk for easier debugging. Normally scip-java can read this up to when
+    // someone calls tries to manually create SCIP from semanticDB, but since
+    // we are fully controlling everything here I think we can just write it
+    // where it's easier since it won't be used that way and instead just
+    // create the necessary package information and pass it right to
+    // ScipSemanticdbOptions.
+    os.write(
+      dest / "javacopts.txt",
+      Seq("-classpath\n", projects.mkString(":")),
+      createFolders = true
+    )
+    val classPathEntries =
+      projects.flatMap(project => ClasspathEntry.fromPom(project.toNIO))
+
+    log.info(s"Including ${classPathEntries.size} classpath entries")
+
     val options = new ScipSemanticdbOptions(
       List(dest).map(_.toNIO).asJava,
       scipFile.toNIO,
@@ -233,7 +265,9 @@ object Scip extends ExternalModule {
       "java",
       ScipOutputFormat.TYPED_PROTOBUF,
       true, // parallel -- this is fine
-      List.empty.asJava, // TODO figure this out later
+      classPathEntries
+        .map(_.toPackageInformation)
+        .asJava,
       "" // BuildKind here is fine being ""
     )
 
