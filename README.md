@@ -17,7 +17,7 @@ post](https://about.sourcegraph.com/blog/announcing-scip).
 
 ## Requirements
 
-- This plugin currently requires **at least Mill 0.10.3**
+- This plugin only supports **Mill 0.10.x**
 
 ## Quick Start
 
