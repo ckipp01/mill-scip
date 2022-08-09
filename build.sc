@@ -16,7 +16,7 @@ import de.tobiasroeser.mill.integrationtest._
 import mill.scalalib.api.ZincWorkerUtil
 import scala.util.Try
 
-val millVersion = "0.10.3"
+val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
 val scala213 = "2.13.8"
 // TODO figure out where to put these 2 so that Steward can update them

@@ -12,7 +12,6 @@ import mill.main.EvaluatorScopt
 import mill.scalalib.JavaModule
 import mill.scalalib.ScalaModule
 import mill.scalalib.api.ZincWorkerUtil.isScala3
-import mill.scalalib.internal.ModuleUtils
 import os.Path
 
 import scala.jdk.CollectionConverters._
@@ -277,11 +276,8 @@ object Scip extends ExternalModule {
     ScipSemanticdb.run(options)
   }
 
-  private def computeModules(ev: Evaluator): Seq[JavaModule] = {
-    ModuleUtils
-      .transitiveModules(ev.rootModule)
-      .collect { case jm: JavaModule => jm }
-  }
+  private def computeModules(ev: Evaluator) =
+    ev.rootModule.millInternal.modules.collect { case j: JavaModule => j }
 
   implicit def millScoptEvaluatorReads[T]: EvaluatorScopt[T] =
     new mill.main.EvaluatorScopt[T]()
