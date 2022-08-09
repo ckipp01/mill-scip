@@ -1,7 +1,7 @@
 import $ivy.`com.goyeau::mill-scalafix::0.2.10`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.2.0`
 
 import mill._
 import scalalib._
@@ -68,13 +68,7 @@ object plugin
     "io.kipp.mill.scip"
   )
 
-  override def publishVersion = VcsVersion
-    .vcsState()
-    .format(tagModifier = {
-      case t if t.startsWith("v") && Try(t.substring(1, 2).toInt).isSuccess =>
-        t.substring(1)
-      case t => t
-    })
+  override def publishVersion = VcsVersion.vcsState().format()
 
   override def pomSettings = PomSettings(
     description = "Generate SCIP for your Mill build.",
