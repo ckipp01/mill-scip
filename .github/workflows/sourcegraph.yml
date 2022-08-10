@@ -18,7 +18,7 @@ jobs:
           java-version: '17'
 
       - name: Generate SCIP File
-        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.2.1 io.kipp.mill.scip.Scip/generate
+        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.2.2 io.kipp.mill.scip.Scip/generate
 
       - name: Install src
         run: yarn global add @sourcegraph/src
