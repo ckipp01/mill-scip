@@ -21,7 +21,7 @@ val artifactBase = "mill-scip"
 val scala213 = "2.13.8"
 // TODO figure out where to put these 2 so that Steward can update them
 val semanticdb = "4.5.12"
-val semanticdbJava = "0.8.2"
+val semanticdbJava = "0.8.5"
 
 def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
