@@ -194,11 +194,6 @@ object Scip extends ExternalModule {
       }
     }
 
-    // TODO need to generate a dependencies.txt file
-    // https://sourcegraph.github.io/scip-java/docs/manual-configuration.html#step-5-optional-enable-cross-repository-navigation
-    //
-    //
-    //
     val projects: Seq[Path] = modules
       .flatMap { module =>
         Evaluator.evalOrThrow(ev)(T.task(module.resolvedIvyDeps()))
