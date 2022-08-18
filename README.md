@@ -60,8 +60,14 @@ _Here is an example after running on the [Courser code base](https://github.com/
 
 More than likely the reason you're generating your `index.scip` is to upload to
 Sourcegraph. The easiest way to do this is in a GitHub action workflow like you
-see below:
+see below. For convenience the following curl command will create it for you in
+your repo:
 
+```sh
+curl -sLo .github/workflows/sourcegraph.yml --create-dirs https://raw.githubusercontent.com/ckipp01/mill-scip/main/.github/workflows/sourcegraph.yml
+```
+
+_Example workflow_
 ```yml
 name: Sourcegraph
 on:
