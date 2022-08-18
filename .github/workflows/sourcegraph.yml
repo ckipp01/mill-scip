@@ -11,20 +11,18 @@ jobs:
     name: "Upload SCIP"
     steps:
       - uses: actions/checkout@v3
-      - uses: coursier/cache-action@v6
-      - uses: actions/setup-java@v3
+      - uses: coursier/setup-action@v1
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          jvm: 'temurin:17'
+          apps: scip-java
 
       - name: Generate SCIP File
-        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.2.2 io.kipp.mill.scip.Scip/generate
+        run: scip-java index
 
       - name: Install src
         run: yarn global add @sourcegraph/src
 
       - name: Upload SCIP file
-        run: |
-          src code-intel upload -trace=3 -root . -file out/io/kipp/mill/scip/Scip/generate.dest/index.scip -github-token $GITHUB_TOKEN
+        run: src code-intel upload -github-token $GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
