@@ -279,8 +279,8 @@ object Scip extends ExternalModule {
   private def computeModules(ev: Evaluator) =
     ev.rootModule.millInternal.modules.collect { case j: JavaModule => j }
 
-  implicit def millScoptEvaluatorReads[T]: EvaluatorScopt[T] =
-    new mill.main.EvaluatorScopt[T]()
+  implicit def millScoptEvaluatorReads[A]: EvaluatorScopt[A] =
+    new mill.main.EvaluatorScopt[A]()
 
   lazy val millDiscover = mill.define.Discover[this.type]
 }
