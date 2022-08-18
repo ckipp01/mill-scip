@@ -2,6 +2,7 @@ import $ivy.`com.goyeau::mill-scalafix::0.2.10`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.2.0`
+import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.0`
 
 import mill._
 import scalalib._
@@ -13,6 +14,7 @@ import mill.contrib.buildinfo.BuildInfo
 import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import de.tobiasroeser.mill.integrationtest._
+import io.github.davidgregory084.TpolecatModule
 import mill.scalalib.api.ZincWorkerUtil
 import scala.util.Try
 
@@ -32,7 +34,8 @@ object plugin
     with PublishModule
     with BuildInfo
     with ScalafixModule
-    with ScalafmtModule {
+    with ScalafmtModule
+    with TpolecatModule {
 
   override def scalaVersion = scala213
 
@@ -49,9 +52,6 @@ object plugin
   override def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"com.sourcegraph::scip-java:$semanticdbJava"
   )
-
-  override def scalacOptions =
-    super.scalacOptions() ++ Seq("-Ywarn-unused", "-deprecation")
 
   override def scalafixIvyDeps = Agg(
     ivy"com.github.liancheng::organize-imports:0.6.0"
