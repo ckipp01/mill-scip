@@ -17,42 +17,50 @@ post](https://about.sourcegraph.com/blog/announcing-scip).
 
 ## Requirements
 
-- This plugin only supports **Mill 0.10.x**
+- This plugin currently only supports the **Mill 0.10.x** series
 
 ## Quick Start
 
-This plugin is an [external mill
+This plugin is an [external Mill
 module](https://com-lihaoyi.github.io/mill/mill/Modules.html#_external_modules)
-so you don't need to add anything to your build to use it. The easiest way to
-run this against your project is by the below command:
+so you don't need to add anything to your build to use it.
 
+The quickest way to use this is actually by using the
+[`scip-java`](https://sourcegraph.github.io/scip-java/) cli. You can install it
+with [Coursier](https://get-coursier.io/docs/cli-installation).
+
+```sh
+cs install --contrib scip-java
 ```
-mill --import ivy:io.chris-kipp::mill-scip::0.2.2 io.kipp.mill.scip.Scip/generate
+
+Once installed, you just need to run `scip-java index` in your workspace:
+
+```sh
+scip-java index
 ```
 
-This command will generate an `index.scip` file for you located in your
-`out/io/kipp/mill/scip/Scip/generate.dest/` directory.
+`scip-java` will actually use this plugin to genreate an `index.scip` which you
+can then find at the root of your project.
 
-You can verify that this worked correctly by using the [scip cli
+You can also verify that this worked correctly by using the [scip cli
 tool](https://github.com/sourcegraph/scip).
 
+_Here is an example after running on the [Courser code base](https://github.com/coursier/coursier)_
 ```
-❯ scip stats --from out/io/kipp/mill/scip/Scip/generate.dest/index.scip
+❯ scip stats
 {
-  "documents": 12,
-  "linesOfCode": 427,
-  "occurrences": 1211,
-  "definitions": 285
+  "documents": 450,
+  "linesOfCode": 46090,
+  "occurrences": 112426,
+  "definitions": 18979
 }
 ```
 
 ## Uploading to Sourcegraph
 
-Currently the easiest way to upload to sourcegraph is by having a workflow that
-generates your `index.scip` and then using the [sourcegraph cli
-tool](https://docs.sourcegraph.com/cli) to upload it. More than likely there
-will be a GitHub action to do this for your Mill builds in the future when this
-project is more feature complete.
+More than likely the reason you're generating your `index.scip` is to upload to
+Sourcegraph. The easiest way to do this is in a GitHub action workflow like you
+see below:
 
 ```yml
 name: Sourcegraph
@@ -68,32 +76,39 @@ jobs:
     name: "Upload SCIP"
     steps:
       - uses: actions/checkout@v3
-      - uses: coursier/cache-action@v6
-      - uses: actions/setup-java@v3
+      - uses: coursier/setup-action@v1
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          jvm: 'temurin:17'
+          apps: scip-java
 
       - name: Generate SCIP File
-        run: ./mill --import ivy:io.chris-kipp::mill-scip::0.2.2 io.kipp.mill.scip.Scip/generate
+        run: scip-java index
 
       - name: Install src
         run: yarn global add @sourcegraph/src
 
       - name: Upload SCIP file
-        run: |
-          src code-intel upload -trace=3 -root . -file out/io/kipp/mill/scip/Scip/generate.dest/index.scip -github-token $GITHUB_TOKEN
+        run: src code-intel upload -github-token $GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Generating with Mill
+
+You can also use Mill directly to create your index by doing the following:
+
+```sh
+mill --import ivy:io.chris-kipp::mill-scip::0.2.2 io.kipp.mill.scip.Scip/generate
+```
+
+This command will generate an `index.scip` file for you located in your
+`out/io/kipp/mill/scip/Scip/generate.dest/` directory.
+
 ## Limitations
 
 - Currently `mill-scip` works for Scala 2 modules and Scala 3 modules only. Pure
-- Java modules aren't yet supported due to some issues when running on Java 17. You
-    can track the progress of this
-    [here](https://github.com/com-lihaoyi/mill/issues/1983) as it needs to be
-    addressed upstream.
+- Java modules aren't yet supported due to some issues when running on Java 17.
+    This has been fixed upstream and should work in the next version of Mill.
 
 ## How does this work?
 
