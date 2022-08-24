@@ -6,7 +6,9 @@ import com.sourcegraph.scip_semanticdb.ScipSemanticdb
 import com.sourcegraph.scip_semanticdb.ScipSemanticdbOptions
 import mill._
 import mill.api.Logger
+import mill.api.Result
 import mill.define.ExternalModule
+import mill.define.Task
 import mill.eval.Evaluator
 import mill.main.EvaluatorScopt
 import mill.scalalib.JavaModule
@@ -26,8 +28,11 @@ object Scip extends ExternalModule {
     * producing semanticDB. Once we fully have all the semanticDB we call
     * ScipSemanticdb to slurp it all up and create a SCIP index.
     */
-  def generate(ev: Evaluator) = T.command {
+  def generate(ev: Evaluator, output: String = "index.scip") = T.command {
+
     val log = T.ctx().log
+
+    val outputFormat = validateFormat(output)()
 
     val semanticdbVersion = ScipBuildInfo.semanticDBVersion
 
@@ -200,8 +205,33 @@ object Scip extends ExternalModule {
       }
       .map(_.path)
 
-    createScip(log, T.dest, T.workspace, projects)
-    T.dest / "index.scip"
+    createScip(log, T.dest, T.workspace, projects, output, outputFormat)
+    T.dest / output
+  }
+
+  /** Given an output string, determine that a ScipOutputFormat can be
+    * determined from it.
+    *
+    * @param output
+    *   the given output from the user
+    * @return
+    *   the parsed output format to be generated
+    */
+  private def validateFormat(output: String): Task[ScipOutputFormat] = T.task {
+    val format = ScipOutputFormat.fromFilename(output)
+    if (format == ScipOutputFormat.UNKNOWN) {
+      val msg =
+        s"""Detected an unknown output type. You'll want to use one of the following:
+                    |
+                    | - *.lsif
+                    | - *.lsif-protobuf
+                    | - *.scip
+                    | - *.scip.ndjson
+                    |""".stripMargin
+      Result.Failure(msg)
+    } else {
+      format
+    }
   }
 
   /** After all the semanticDB has been produced we can create the SCIP index
@@ -215,14 +245,21 @@ object Scip extends ExternalModule {
     *   The current workspace root
     * @param projects
     *   Full classpath of the project to be used for cross-project navigation.
+    * @param output
+    *   The name out of the output file
+    * @param outputFormat
+    *   The format of the output
     */
   private def createScip(
       log: Logger,
       dest: Path,
       workspace: Path,
-      projects: Seq[Path]
+      projects: Seq[Path],
+      output: String,
+      outputFormat: ScipOutputFormat
   ): Unit = {
-    val scipFile = dest / "index.scip"
+
+    val scipFile = dest / output
     val reporter = new ScipReporter(log)
     val toolInfo =
       LsifToolInfo
@@ -233,7 +270,7 @@ object Scip extends ExternalModule {
         .setVersion(ScipBuildInfo.semanticDBJavaVersion)
         .build()
 
-    log.info(s"Creating a index.scip in ${scipFile}")
+    log.info(s"Creating a ${output} in ${scipFile}")
 
     // So this is maybe a bit opinionated here, but we're only writing this to
     // disk for easier debugging. Normally scip-java can read this up to when
@@ -260,7 +297,7 @@ object Scip extends ExternalModule {
       reporter,
       toolInfo,
       "java",
-      ScipOutputFormat.TYPED_PROTOBUF,
+      outputFormat,
       true, // parallel -- this is fine
       classPathEntries
         .map(_.toPackageInformation)

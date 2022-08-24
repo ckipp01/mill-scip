@@ -35,3 +35,12 @@ def generate(ev: Evaluator) = T.command {
   // Then we ensure that the index.scip file was actually created
   assertEquals(os.exists(scipFile), true)
 }
+
+def lsif(ev: Evaluator) = T.command {
+  val scipFile = Scip.generate(ev, "dump.lsif")()
+  assertEquals(os.exists(scipFile), true)
+}
+
+def fail(ev: Evaluator) = T.command {
+  Scip.generate(ev, "wrong.format")
+}

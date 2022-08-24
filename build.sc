@@ -93,7 +93,13 @@ object itest extends MillIntegrationTestModule {
     T {
       Seq(
         PathRef(testBase / "minimal") -> Seq(
-          TestInvocation.Targets(Seq("generate"), noServer = true)
+          TestInvocation.Targets(Seq("generate"), noServer = true),
+          TestInvocation.Targets(Seq("lsif"), noServer = true),
+          TestInvocation.Targets(
+            Seq("fail"),
+            noServer = true,
+            expectedExitCode = 1
+          )
         )
       )
     }
