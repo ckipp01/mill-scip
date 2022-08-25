@@ -17,6 +17,7 @@ import mill.scalalib.api.ZincWorkerUtil.isScala3
 import os.Path
 
 import scala.jdk.CollectionConverters._
+import scala.util.Properties
 
 object Scip extends ExternalModule {
 
@@ -140,72 +141,93 @@ object Scip extends ExternalModule {
           reporter = T.reporter.apply(hashCode)
         )
 
-      case jm: JavaModule => {
-        // TODO Right now there seems to be no way to use this on JDK 17. So
-        // dig into the issue below before enabling Java support.
-        // https://github.com/com-lihaoyi/mill/issues/1983
-
-        val name =
+      case jm: JavaModule if MillUtils.canHandleJava(BuildInfo.millVersion) => {
+        val (
+          name,
+          zincWorker,
+          upstreamCompileOutput,
+          sources,
+          compileClasspath,
+          javacOptions
+        ) =
           Evaluator.evalOrThrow(ev) {
             T.task {
               val name = jm.artifactName()
-              // val zincWorker = jm.zincWorker.worker()
-              // val upstreamCompileOutput = jm.upstreamCompileOutput()
-              // val sources = jm.allSourceFiles().map(_.path)
-              // val compileClasspath = jm.compileClasspath().map(_.path)
-              // val javacOptions = jm.javacOptions()
-              name
+              val zincWorker = jm.zincWorker.worker()
+              val upstreamCompileOutput = jm.upstreamCompileOutput()
+              val sources = jm.allSourceFiles().map(_.path)
+              val compileClasspath = jm.compileClasspath().map(_.path)
+              val javacOptions = jm.javacOptions()
+              (
+                name,
+                zincWorker,
+                upstreamCompileOutput,
+                sources,
+                compileClasspath,
+                javacOptions
+              )
             }
           }
 
-        // val updatedCompileClasspath =
-        //  compileClasspath ++ SemanticdbFetcher.getSemanticdbPaths(ev, jm)
+        val semanticDBJavaVersion = ScipBuildInfo.semanticDBJavaVersion
 
-        // lazy val javacModuleOptions =
-        //  List(
-        //    "-J--add-exports",
-        //    "-Jjdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-        //    "-J--add-exports",
-        //    "-Jjdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-        //    "-J--add-exports",
-        //    "-Jjdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
-        //    "-J--add-exports",
-        //    "-Jjdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-        //    "-J--add-exports",
-        //    "-Jjdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
-        //  )
-
-        // val extracJavacExports =
-        //  if (Properties.isJavaAtLeast(17)) javacModuleOptions.mkString(",")
-        //  else ""
-
-        //// TODO can I also add -build-tool:mill like they do for sbt? What does this do?
-        // val updatedJavacOptions = javacOptions ++ Seq(
-        //  s"-Xplugin:semanticdb -sourceroot:${T.workspace} -targetroot:${T.dest}",
-        //  extracJavacExports
-        // )
-
-        // zincWorker
-        //  .compileJava(
-        //    upstreamCompileOutput,
-        //    sources,
-        //    updatedCompileClasspath,
-        //    updatedJavacOptions,
-        //    T.reporter.apply(hashCode)
-        //  )
         log.info(
-          s"Skipping Java module [${name}] for now, You can track the progress of this in https://github.com/com-lihaoyi/mill/issues/1983"
+          s"Ensuring everything needed for java semanticdb version [${semanticDBJavaVersion}] is available"
+        )
+
+        val updatedCompileClasspath =
+          compileClasspath ++ SemanticdbFetcher.getSemanticdbPaths(ev, jm)
+
+        lazy val javacModuleOptions =
+          List(
+            "-J--add-exports",
+            "-Jjdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+            "-J--add-exports",
+            "-Jjdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+            "-J--add-exports",
+            "-Jjdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
+            "-J--add-exports",
+            "-Jjdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "-J--add-exports",
+            "-Jjdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+          )
+
+        val extracJavacExports =
+          if (Properties.isJavaAtLeast(17)) javacModuleOptions
+          else Seq.empty
+
+        val updatedJavacOptions = javacOptions ++ Seq(
+          s"-Xplugin:semanticdb -sourceroot:${T.workspace} -targetroot:${T.dest} -build-tool:sbt"
+        ) ++ extracJavacExports
+
+        log.info(
+          s"Generating semanticdb for [${name}]"
+        )
+
+        zincWorker
+          .compileJava(
+            upstreamCompileOutput,
+            sources,
+            updatedCompileClasspath,
+            updatedJavacOptions,
+            T.reporter.apply(hashCode)
+          )
+      }
+      case jm: JavaModule => {
+        val name = Evaluator.evalOrThrow(ev)(T.task(jm.artifactName()))
+        log.error(
+          s"Skipping ${name}. You must be using at least Mill 0.10.6 to process Java Modules."
         )
       }
     }
 
-    val projects: Seq[Path] = modules
+    val classpath: Seq[Path] = modules
       .flatMap { module =>
         Evaluator.evalOrThrow(ev)(T.task(module.resolvedIvyDeps()))
       }
       .map(_.path)
 
-    createScip(log, T.dest, T.workspace, projects, output, outputFormat)
+    createScip(log, T.dest, T.workspace, classpath, output, outputFormat)
     T.dest / output
   }
 
@@ -243,7 +265,7 @@ object Scip extends ExternalModule {
     *   The destination dir that we'll stick the index in
     * @param workspace
     *   The current workspace root
-    * @param projects
+    * @param classpath
     *   Full classpath of the project to be used for cross-project navigation.
     * @param output
     *   The name out of the output file
@@ -254,7 +276,7 @@ object Scip extends ExternalModule {
       log: Logger,
       dest: Path,
       workspace: Path,
-      projects: Seq[Path],
+      classpath: Seq[Path],
       output: String,
       outputFormat: ScipOutputFormat
   ): Unit = {
@@ -281,12 +303,12 @@ object Scip extends ExternalModule {
     // ScipSemanticdbOptions.
     os.write(
       dest / "javacopts.txt",
-      Seq("-classpath\n", projects.mkString(":")),
+      Seq("-classpath\n", classpath.mkString(":")),
       createFolders = true
     )
 
     val classPathEntries =
-      projects.flatMap(project => ClasspathEntry.fromPom(project.toNIO))
+      classpath.flatMap(project => ClasspathEntry.fromPom(project.toNIO))
 
     log.info(s"Including ${classPathEntries.size} classpath entries")
 
