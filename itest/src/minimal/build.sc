@@ -15,6 +15,8 @@ object minimalThree extends ScalaModule {
   def scalaVersion = "3.1.3"
 }
 
+object minimalJava extends JavaModule
+
 def generate(ev: Evaluator) = T.command {
   val scipFile = Scip.generate(ev)()
 
@@ -29,9 +31,12 @@ def generate(ev: Evaluator) = T.command {
   assertEquals(firstLine, "-classpath")
 
   val semanticdbFiles = os.walk(os.pwd / "out").filter(_.ext == "semanticdb")
-  // We should find 3 different semanticdb files to show that it's working in a
-  // normal Scala 2 module, the test module, and the Scala 3 module.
-  assertEquals(semanticdbFiles.size, 3)
+  // A little hacky but we want to check if the user is on 0.10.7 or not because
+  // that's when Java support was added, so if we are on that version we expect
+  // 4 semanticDB documents since it includes Java, if not 3 which accounts for
+  // the Scala module, the test module, and the Scala 3 module.
+  val desiredSize = if (BuildInfo.millVersion == "0.10.7") 4 else 3
+  assertEquals(semanticdbFiles.size, desiredSize)
   // Then we ensure that the index.scip file was actually created
   assertEquals(os.exists(scipFile), true)
 }

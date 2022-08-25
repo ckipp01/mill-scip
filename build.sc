@@ -24,6 +24,11 @@ val scala213 = "2.13.8"
 val semanticdb = "4.5.13"
 val semanticdbJava = "0.8.6"
 
+// We temporarily test against 0.10.7 as well before we have a 0.11.x just
+// to ensure that on that version we can also get semanticDB produced for
+// Java Modules.
+val millTestVersions = Seq(millVersion, "0.10.7")
+
 def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
 )
@@ -79,13 +84,20 @@ object plugin
     developers =
       Seq(Developer("ckipp01", "Chris Kipp", "https://www.chris-kipp.io"))
   )
+
+  object test extends Tests with TestModule.Munit {
+    def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M6")
+  }
 }
 
-object itest extends MillIntegrationTestModule {
+object itest extends Cross[ItestCross](millTestVersions: _*)
+class ItestCross(testVersion: String) extends MillIntegrationTestModule {
 
-  def millTestVersion = millVersion
+  def millTestVersion = testVersion
 
   def pluginsUnderTest = Seq(plugin)
+
+  override def millSourcePath = super.millSourcePath / os.up
 
   def testBase = millSourcePath / "src"
 
