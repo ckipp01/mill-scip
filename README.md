@@ -104,17 +104,11 @@ jobs:
 You can also use Mill directly to create your index by doing the following:
 
 ```sh
-mill --import ivy:io.chris-kipp::mill-scip::0.2.2 io.kipp.mill.scip.Scip/generate
+mill --import ivy:io.chris-kipp::mill-scip::0.3.0 io.kipp.mill.scip.Scip/generate
 ```
 
 This command will generate an `index.scip` file for you located in your
 `out/io/kipp/mill/scip/Scip/generate.dest/` directory.
-
-## Limitations
-
-- Currently `mill-scip` works for Scala 2 modules and Scala 3 modules only. Pure
-- Java modules aren't yet supported due to some issues when running on Java 17.
-    This has been fixed upstream and should work in the next version of Mill.
 
 ## How does this work?
 

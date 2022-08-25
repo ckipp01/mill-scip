@@ -16,7 +16,6 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import de.tobiasroeser.mill.integrationtest._
 import io.github.davidgregory084.TpolecatModule
 import mill.scalalib.api.ZincWorkerUtil
-import scala.util.Try
 
 val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
