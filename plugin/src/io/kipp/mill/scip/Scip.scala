@@ -197,7 +197,7 @@ object Scip extends ExternalModule {
           else Seq.empty
 
         val updatedJavacOptions = javacOptions ++ Seq(
-          s"-Xplugin:semanticdb -sourceroot:${T.workspace} -targetroot:${T.dest}"
+          s"-Xplugin:semanticdb -sourceroot:${T.workspace} -targetroot:${T.dest} -build-tool:sbt"
         ) ++ extracJavacExports
 
         log.info(
