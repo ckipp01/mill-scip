@@ -110,6 +110,21 @@ mill --import ivy:io.chris-kipp::mill-scip::0.3.0 io.kipp.mill.scip.Scip/generat
 This command will generate an `index.scip` file for you located in your
 `out/io/kipp/mill/scip/Scip/generate.dest/` directory.
 
+### Output formats
+
+You can optionally pass in a ouput format to `generate`. The following formats
+are supported:
+
+- *.lsif
+- *.lsif-protobuf
+- *.scip
+- *.scip.ndjson
+
+_An example of passing in the output format_
+```sh 
+mill --import ivy:io.chris-kipp::mill-scip::0.3.0 io.kipp.mill.scip.Scip/generate --output dump.lsif
+```
+
 ## How does this work?
 
 The [manual configuration
