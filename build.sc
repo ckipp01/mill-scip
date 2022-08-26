@@ -21,7 +21,7 @@ val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
 val scala213 = "2.13.8"
 val semanticdb = "4.5.13"
-val semanticdbJava = "0.8.6"
+val semanticdbJava = "0.8.7"
 
 // We temporarily test against 0.10.7 as well before we have a 0.11.x just
 // to ensure that on that version we can also get semanticDB produced for
