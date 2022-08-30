@@ -1,21 +1,21 @@
 import $ivy.`com.goyeau::mill-scalafix::0.2.10`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.2.0`
+import $ivy.`io.chris-kipp::mill-ci-release::0.1.0`
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.0`
 
 import mill._
 import scalalib._
-import publish._
-import scalafmt._
-import mill.scalalib.publish.{Developer, License, PomSettings, VersionControl}
+import mill.scalalib.publish._
+import mill.scalalib.scalafmt._
 import mill.scalalib.api.Util.scalaNativeBinaryVersion
 import mill.contrib.buildinfo.BuildInfo
+import mill.scalalib.api.ZincWorkerUtil
+
 import com.goyeau.mill.scalafix.ScalafixModule
-import de.tobiasroeser.mill.vcs.version.VcsVersion
 import de.tobiasroeser.mill.integrationtest._
 import io.github.davidgregory084.TpolecatModule
-import mill.scalalib.api.ZincWorkerUtil
+import io.kipp.mill.ci.release.CiReleaseModule
 
 val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
@@ -34,7 +34,7 @@ def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
 
 object plugin
     extends ScalaModule
-    with PublishModule
+    with CiReleaseModule
     with BuildInfo
     with ScalafixModule
     with ScalafmtModule
@@ -71,8 +71,6 @@ object plugin
     "io.kipp.mill.scip"
   )
 
-  override def publishVersion = VcsVersion.vcsState().format()
-
   override def pomSettings = PomSettings(
     description = "Generate SCIP for your Mill build.",
     organization = "io.chris-kipp",
@@ -83,6 +81,10 @@ object plugin
     developers =
       Seq(Developer("ckipp01", "Chris Kipp", "https://www.chris-kipp.io"))
   )
+
+  override def sonatypeUri = "https://s01.oss.sonatype.org/service/local"
+  override def sonatypeSnapshotUri =
+    "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
   object test extends Tests with TestModule.Munit {
     def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M6")
