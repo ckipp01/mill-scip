@@ -1,7 +1,7 @@
 import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
-import $ivy.`io.chris-kipp::mill-ci-release::0.1.2`
+import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
 
 import mill._
@@ -16,6 +16,7 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.integrationtest._
 import io.github.davidgregory084.TpolecatModule
 import io.kipp.mill.ci.release.CiReleaseModule
+import io.kipp.mill.ci.release.SonatypeHost
 
 val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
@@ -82,9 +83,7 @@ object plugin
       Seq(Developer("ckipp01", "Chris Kipp", "https://www.chris-kipp.io"))
   )
 
-  override def sonatypeUri = "https://s01.oss.sonatype.org/service/local"
-  override def sonatypeSnapshotUri =
-    "https://s01.oss.sonatype.org/content/repositories/snapshots"
+  override def sonatypeHost: Option[SonatypeHost] = Some(SonatypeHost.s01)
 
   object test extends Tests with TestModule.Munit {
     def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M6")
