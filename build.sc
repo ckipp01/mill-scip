@@ -16,6 +16,7 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.integrationtest._
 import io.github.davidgregory084.TpolecatModule
 import io.kipp.mill.ci.release.CiReleaseModule
+import io.kipp.mill.ci.release.SonatypeHost
 
 val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
@@ -82,9 +83,7 @@ object plugin
       Seq(Developer("ckipp01", "Chris Kipp", "https://www.chris-kipp.io"))
   )
 
-  override def sonatypeUri = "https://s01.oss.sonatype.org/service/local"
-  override def sonatypeSnapshotUri =
-    "https://s01.oss.sonatype.org/content/repositories/snapshots"
+  override def sonatypeHost: Option[SonatypeHost] = Some(SonatypeHost.s01)
 
   object test extends Tests with TestModule.Munit {
     def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M6")
