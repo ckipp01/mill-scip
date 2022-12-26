@@ -20,7 +20,7 @@ import io.kipp.mill.ci.release.SonatypeHost
 
 val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
-val scala213 = "2.13.8"
+val scala213 = "2.13.10"
 val semanticdb = "4.5.13"
 val semanticdbJava = "0.8.9"
 

@@ -6,7 +6,7 @@ import $ivy.`org.scalameta::munit:0.7.29`
 import munit.Assertions._
 
 object minimal extends ScalaModule {
-  def scalaVersion = "2.13.8"
+  def scalaVersion = "2.13.10"
 
   object test extends Tests
 }
