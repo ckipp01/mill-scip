@@ -18,7 +18,7 @@ import io.github.davidgregory084.TpolecatModule
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
 
-val millVersion = "0.10.0"
+val millVersion = "0.10.10"
 val artifactBase = "mill-scip"
 val scala213 = "2.13.8"
 val semanticdb = "4.5.13"
