@@ -27,7 +27,7 @@ val semanticdbJava = "0.8.9"
 // We temporarily test against a newer than 0.10.7 version as well before
 // we have a 0.11.x just to ensure that on that version we can also get
 // semanticDB produced for Java Modules.
-val millTestVersions = Seq(millVersion, "0.10.10")
+val millTestVersions = Seq(millVersion, "0.10.7")
 
 def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
