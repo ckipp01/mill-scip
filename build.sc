@@ -2,7 +2,7 @@ import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.5`
-import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
+import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
 
 import mill._
 import scalalib._
