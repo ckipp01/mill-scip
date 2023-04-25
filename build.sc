@@ -22,7 +22,7 @@ val millVersion = "0.10.0"
 val artifactBase = "mill-scip"
 val scala213 = "2.13.10"
 val semanticdb = "4.5.13"
-val semanticdbJava = "0.8.15"
+val semanticdbJava = "0.8.16"
 
 // We temporarily test against a newer than 0.10.7 version as well before
 // we have a 0.11.x just to ensure that on that version we can also get
