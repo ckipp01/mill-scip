@@ -324,7 +324,8 @@ object Scip extends ExternalModule {
       classPathEntries
         .map(_.toPackageInformation)
         .asJava,
-      "" // BuildKind here is fine being ""
+      "", // BuildKind here is fine being ""
+      true // emit inverse releationships
     )
 
     ScipSemanticdb.run(options)
