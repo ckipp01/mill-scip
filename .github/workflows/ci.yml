@@ -55,7 +55,7 @@ jobs:
 
     - name: Unit tests
       run:
-        ./mill -i plugin.test
+        ./mill -i plugin[_].test
 
     - name: Integration tests
       run:

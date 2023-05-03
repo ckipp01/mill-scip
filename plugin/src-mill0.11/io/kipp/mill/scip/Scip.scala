@@ -10,7 +10,6 @@ import mill.api.Result
 import mill.define.ExternalModule
 import mill.define.Task
 import mill.eval.Evaluator
-import mill.main.EvaluatorScopt
 import mill.scalalib.JavaModule
 import mill.scalalib.ScalaModule
 import mill.scalalib.api.ZincWorkerUtil.isScala3
@@ -69,11 +68,9 @@ object Scip extends ExternalModule {
 
               val compilerClasspath = sm
                 .scalaCompilerClasspath()
-                .map(_.path)
 
               val scalacPluginClasspath = sm
                 .scalacPluginClasspath()
-                .map(_.path)
 
               val zincWorker = sm.zincWorker.worker()
               (
@@ -93,7 +90,7 @@ object Scip extends ExternalModule {
             }
           }
 
-        val semanticdbDep: Agg[Path] =
+        val semanticdbDep =
           if (isScala3(scalaVersion)) {
             log.info("Scala 3 detected, skipping getting semanticdb plugin")
             Agg.empty
@@ -101,7 +98,7 @@ object Scip extends ExternalModule {
             log.info(
               s"Ensuring everything needed for semanticdb version [${semanticdbVersion}] is available"
             )
-            SemanticdbFetcher.getSemanticdbPaths(ev, sm, semanticdbVersion)
+            SemanticdbFetcher.getSemanticdbPaths(ev, sm)
           }
 
         val updatedScalacOptions = if (isScala3(scalaVersion)) {
@@ -138,7 +135,8 @@ object Scip extends ExternalModule {
           scalacOptions = updatedScalacOptions,
           compilerClasspath = compilerClasspath,
           scalacPluginClasspath = updatedScalacPluginClasspath,
-          reporter = T.reporter.apply(hashCode)
+          reporter = T.reporter.apply(hashCode),
+          reportCachedProblems = true
         )
 
       case jm: JavaModule if MillUtils.canHandleJava(BuildInfo.millVersion) => {
@@ -176,7 +174,9 @@ object Scip extends ExternalModule {
         )
 
         val updatedCompileClasspath =
-          compileClasspath ++ SemanticdbFetcher.getSemanticdbPaths(ev, jm)
+          compileClasspath ++ SemanticdbFetcher
+            .getSemanticdbPaths(ev, jm)
+            .map(_.path)
 
         lazy val javacModuleOptions =
           List(
@@ -210,7 +210,8 @@ object Scip extends ExternalModule {
             sources,
             updatedCompileClasspath,
             updatedJavacOptions,
-            T.reporter.apply(hashCode)
+            T.reporter.apply(hashCode),
+            reportCachedProblems = true
           )
       }
       case jm: JavaModule => {
@@ -334,8 +335,8 @@ object Scip extends ExternalModule {
   private def computeModules(ev: Evaluator) =
     ev.rootModule.millInternal.modules.collect { case j: JavaModule => j }
 
-  implicit def millScoptEvaluatorReads[A]: EvaluatorScopt[A] =
-    new mill.main.EvaluatorScopt[A]()
+  implicit def millEvaluatorTokenReader =
+    mill.main.TokenReaders.millEvaluatorTokenReader
 
   lazy val millDiscover = mill.define.Discover[this.type]
 }

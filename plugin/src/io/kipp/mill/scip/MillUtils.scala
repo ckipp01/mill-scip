@@ -9,7 +9,7 @@ object MillUtils {
           if (major.toInt > 0 || (minor.toInt >= 10 && patch.toInt >= 6)) =>
         true
       case _ => false
-    }).getOrElse(false)
+    }).getOrElse(true)
   }
 
 }

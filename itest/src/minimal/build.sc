@@ -1,5 +1,5 @@
 import mill._, scalalib._
-import $exec.plugins
+import $file.plugins
 import io.kipp.mill.scip.Scip
 import mill.eval.Evaluator
 import $ivy.`org.scalameta::munit:0.7.29`
@@ -8,7 +8,7 @@ import munit.Assertions._
 object minimal extends ScalaModule {
   def scalaVersion = "2.13.10"
 
-  object test extends Tests
+  object test extends Tests with TestModule.Munit
 }
 
 object minimalThree extends ScalaModule {
@@ -31,12 +31,7 @@ def generate(ev: Evaluator) = T.command {
   assertEquals(firstLine, "-classpath")
 
   val semanticdbFiles = os.walk(os.pwd / "out").filter(_.ext == "semanticdb")
-  // A little hacky but we want to check if the user is on 0.10.7 or not because
-  // that's when Java support was added, so if we are on that version we expect
-  // 4 semanticDB documents since it includes Java, if not 3 which accounts for
-  // the Scala module, the test module, and the Scala 3 module.
-  val desiredSize = if (BuildInfo.millVersion == "0.10.7") 4 else 3
-  assertEquals(semanticdbFiles.size, desiredSize)
+  assertEquals(semanticdbFiles.size, 4)
   // Then we ensure that the index.scip file was actually created
   assertEquals(os.exists(scipFile), true)
 }

@@ -35,11 +35,11 @@ object SemanticdbFetcher {
     */
   private[scip] def getSemanticdbPaths(
       ev: Evaluator,
-      jm: JavaModule
+      jm: JavaModule,
+      semanticdbVersion: String
   ): Agg[Path] = {
-    val version = ScipBuildInfo.semanticDBJavaVersion
-
-    val millDep = Dep.parse(s"com.sourcegraph:semanticdb-javac:${version}")
+    val millDep =
+      Dep.parse(s"com.sourcegraph:semanticdb-javac:${semanticdbVersion}")
 
     val semanticdbPaths: Agg[Path] = Evaluator
       .evalOrThrow(ev)(
