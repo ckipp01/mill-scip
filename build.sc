@@ -2,7 +2,6 @@ import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.7.0`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.6`
-import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
 
 import mill._
 import scalalib._
@@ -14,43 +13,51 @@ import mill.scalalib.api.ZincWorkerUtil
 
 import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.integrationtest._
-import io.github.davidgregory084.TpolecatModule
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
 
-val millVersion = "0.10.0"
+val millVersions = Seq("0.10.12", "0.11.0-M8")
+val millBinaryVersions = millVersions.map(scalaNativeBinaryVersion)
 val artifactBase = "mill-scip"
 val scala213 = "2.13.10"
 val semanticdb = "4.5.13"
 val semanticdbJava = "0.8.17"
 
-// We temporarily test against a newer than 0.10.7 version as well before
-// we have a 0.11.x just to ensure that on that version we can also get
-// semanticDB produced for Java Modules.
-val millTestVersions = Seq(millVersion, "0.10.7")
-
 def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
 )
 
-object plugin
+def millVersion(binaryVersion: String) =
+  millVersions.find(v => millBinaryVersion(v) == binaryVersion).get
+
+object plugin extends Cross[Plugin](millBinaryVersions: _*)
+class Plugin(millBinaryVersion: String)
     extends ScalaModule
     with CiReleaseModule
     with BuildInfo
     with ScalafixModule
-    with ScalafmtModule
-    with TpolecatModule {
+    with ScalafmtModule {
 
   override def scalaVersion = scala213
+
+  override def scalacOptions = Seq("-Ywarn-unused", "-deprecation")
+
+  override def millSourcePath = super.millSourcePath / os.up
+
+  override def sources = T.sources {
+    super.sources() ++ Seq(
+      millSourcePath / s"src-mill${millVersion(millBinaryVersion).split('.').take(2).mkString(".")}"
+    ).map(PathRef(_))
+  }
 
   override def scalafixScalaBinaryVersion =
     ZincWorkerUtil.scalaBinaryVersion(scala213)
 
   override def artifactName =
-    s"${artifactBase}_mill${millBinaryVersion(millVersion)}"
+    s"${artifactBase}_mill${millBinaryVersion}"
 
   override def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-    ivy"com.lihaoyi::mill-scalalib:$millVersion"
+    ivy"com.lihaoyi::mill-scalalib:${millVersion(millBinaryVersion)}"
   )
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
@@ -90,14 +97,14 @@ object plugin
   }
 }
 
-object itest extends Cross[ItestCross](millTestVersions: _*)
-class ItestCross(testVersion: String) extends MillIntegrationTestModule {
-
-  def millTestVersion = testVersion
-
-  def pluginsUnderTest = Seq(plugin)
+object itest extends Cross[ItestCross](millVersions: _*)
+class ItestCross(millVersion: String) extends MillIntegrationTestModule {
 
   override def millSourcePath = super.millSourcePath / os.up
+
+  def millTestVersion = millVersion
+
+  def pluginsUnderTest = Seq(plugin(millBinaryVersion(millVersion)))
 
   def testBase = millSourcePath / "src"
 
