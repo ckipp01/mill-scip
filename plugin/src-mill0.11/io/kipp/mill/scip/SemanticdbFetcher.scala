@@ -22,10 +22,9 @@ object SemanticdbFetcher {
     val millDep =
       Dep.parse(s"org.scalameta:::semanticdb-scalac:${version}")
 
-    val semanticdbPaths = Evaluator
-      .evalOrThrow(ev)(
-        sm.resolveDeps(T.task(Agg(millDep).map(sm.bindDependency())))
-      )
+    val semanticdbPaths = ev.evalOrThrow()(
+      sm.resolveDeps(T.task(Agg(millDep).map(sm.bindDependency())))
+    )
 
     semanticdbPaths
   }
@@ -40,10 +39,9 @@ object SemanticdbFetcher {
 
     val millDep = Dep.parse(s"com.sourcegraph:semanticdb-javac:${version}")
 
-    val semanticdbPaths = Evaluator
-      .evalOrThrow(ev)(
-        jm.resolveDeps(T.task(Agg(millDep).map(jm.bindDependency())))
-      )
+    val semanticdbPaths = ev.evalOrThrow()(
+      jm.resolveDeps(T.task(Agg(millDep).map(jm.bindDependency())))
+    )
 
     semanticdbPaths
   }
