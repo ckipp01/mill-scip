@@ -5,6 +5,7 @@ import com.sourcegraph.scip_semanticdb.ScipOutputFormat
 import com.sourcegraph.scip_semanticdb.ScipSemanticdb
 import com.sourcegraph.scip_semanticdb.ScipSemanticdbOptions
 import mill._
+import mill.api.BuildInfo
 import mill.api.Logger
 import mill.api.Result
 import mill.define.ExternalModule
@@ -55,7 +56,7 @@ object Scip extends ExternalModule {
           scalacPluginClasspath,
           zincWorker
         ) =
-          Evaluator.evalOrThrow(ev) {
+          ev.evalOrThrow() {
             T.task {
               val name = sm.artifactId()
               val scalaVersion = sm.scalaVersion()
@@ -72,7 +73,7 @@ object Scip extends ExternalModule {
               val scalacPluginClasspath = sm
                 .scalacPluginClasspath()
 
-              val zincWorker = sm.zincWorker.worker()
+              val zincWorker = sm.zincWorker.t.worker()
               (
                 name,
                 scalaVersion,
@@ -148,10 +149,10 @@ object Scip extends ExternalModule {
           compileClasspath,
           javacOptions
         ) =
-          Evaluator.evalOrThrow(ev) {
+          ev.evalOrThrow() {
             T.task {
               val name = jm.artifactName()
-              val zincWorker = jm.zincWorker.worker()
+              val zincWorker = jm.zincWorker.t.worker()
               val upstreamCompileOutput = jm.upstreamCompileOutput()
               val sources = jm.allSourceFiles().map(_.path)
               val compileClasspath = jm.compileClasspath().map(_.path)
@@ -215,7 +216,7 @@ object Scip extends ExternalModule {
           )
       }
       case jm: JavaModule => {
-        val name = Evaluator.evalOrThrow(ev)(T.task(jm.artifactName()))
+        val name = ev.evalOrThrow()(T.task(jm.artifactName()))
         log.error(
           s"Skipping ${name}. You must be using at least Mill 0.10.6 to process Java Modules."
         )
@@ -224,7 +225,7 @@ object Scip extends ExternalModule {
 
     val classpath: Seq[Path] = modules
       .flatMap { module =>
-        Evaluator.evalOrThrow(ev)(T.task(module.resolvedIvyDeps()))
+        ev.evalOrThrow()(T.task(module.resolvedIvyDeps()))
       }
       .map(_.path)
 
@@ -334,9 +335,6 @@ object Scip extends ExternalModule {
 
   private def computeModules(ev: Evaluator) =
     ev.rootModule.millInternal.modules.collect { case j: JavaModule => j }
-
-  implicit def millEvaluatorTokenReader =
-    mill.main.TokenReaders.millEvaluatorTokenReader
 
   lazy val millDiscover = mill.define.Discover[this.type]
 }
