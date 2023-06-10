@@ -93,7 +93,7 @@ class Plugin(millBinaryVersion: String)
   override def sonatypeHost: Option[SonatypeHost] = Some(SonatypeHost.s01)
 
   object test extends Tests with TestModule.Munit {
-    def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M7")
+    def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M8")
   }
 }
 
