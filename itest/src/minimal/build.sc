@@ -8,7 +8,7 @@ import munit.Assertions._
 object minimal extends ScalaModule {
   def scalaVersion = "2.13.10"
 
-  object test extends Tests with TestModule.Munit
+  object test extends ScalaModuleTests with TestModule.Munit
 }
 
 object minimalThree extends ScalaModule {
