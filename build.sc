@@ -64,10 +64,6 @@ class Plugin(millBinaryVersion: String)
     ivy"com.sourcegraph::scip-java:$semanticdbJava"
   )
 
-  override def scalafixIvyDeps = Agg(
-    ivy"com.github.liancheng::organize-imports:0.6.0"
-  )
-
   override def buildInfoMembers = Map(
     "semanticDBVersion" -> semanticdb,
     "semanticDBJavaVersion" -> semanticdbJava
