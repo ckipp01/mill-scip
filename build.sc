@@ -7,9 +7,9 @@ import mill._
 import scalalib._
 import mill.scalalib.publish._
 import mill.scalalib.scalafmt._
-import mill.scalalib.api.Util.scalaNativeBinaryVersion
-import mill.contrib.buildinfo.BuildInfo
 import mill.scalalib.api.ZincWorkerUtil
+import mill.scalalib.api.ZincWorkerUtil._
+import mill.contrib.buildinfo.BuildInfo
 
 import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.integrationtest._
@@ -20,7 +20,7 @@ val millVersions = Seq("0.10.12", "0.11.1")
 val millBinaryVersions = millVersions.map(scalaNativeBinaryVersion)
 val artifactBase = "mill-scip"
 val scala213 = "2.13.10"
-val semanticdb = "4.5.13"
+val semanticdb = "4.8.1"
 val semanticdbJava = "0.8.21"
 
 def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
@@ -30,9 +30,10 @@ def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
 def millVersion(binaryVersion: String) =
   millVersions.find(v => millBinaryVersion(v) == binaryVersion).get
 
-object plugin extends Cross[Plugin](millBinaryVersions: _*)
-class Plugin(millBinaryVersion: String)
-    extends ScalaModule
+object plugin extends Cross[Plugin](millBinaryVersions)
+trait Plugin
+    extends Cross.Module[String]
+    with ScalaModule
     with CiReleaseModule
     with BuildInfo
     with ScalafixModule
@@ -42,11 +43,9 @@ class Plugin(millBinaryVersion: String)
 
   override def scalacOptions = Seq("-Ywarn-unused", "-deprecation")
 
-  override def millSourcePath = super.millSourcePath / os.up
-
   override def sources = T.sources {
     super.sources() ++ Seq(
-      millSourcePath / s"src-mill${millVersion(millBinaryVersion).split('.').take(2).mkString(".")}"
+      millSourcePath / s"src-mill${millVersion(crossValue).split('.').take(2).mkString(".")}"
     ).map(PathRef(_))
   }
 
@@ -54,26 +53,24 @@ class Plugin(millBinaryVersion: String)
     ZincWorkerUtil.scalaBinaryVersion(scala213)
 
   override def artifactName =
-    s"${artifactBase}_mill${millBinaryVersion}"
+    s"${artifactBase}_mill${crossValue}"
 
   override def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-    ivy"com.lihaoyi::mill-scalalib:${millVersion(millBinaryVersion)}"
+    ivy"com.lihaoyi::mill-scalalib:${millVersion(crossValue)}"
   )
 
   override def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"com.sourcegraph::scip-java:$semanticdbJava"
   )
 
-  override def buildInfoMembers = Map(
-    "semanticDBVersion" -> semanticdb,
-    "semanticDBJavaVersion" -> semanticdbJava
+  override def buildInfoMembers = Seq(
+    BuildInfo.Value("semanticDBVersion", semanticdb),
+    BuildInfo.Value("semanticDBJavaVersion", semanticdbJava)
   )
 
   override def buildInfoObjectName = "ScipBuildInfo"
 
-  override def buildInfoPackageName = Some(
-    "io.kipp.mill.scip"
-  )
+  override def buildInfoPackageName = "io.kipp.mill.scip"
 
   override def pomSettings = PomSettings(
     description = "Generate SCIP for your Mill build.",
@@ -88,19 +85,17 @@ class Plugin(millBinaryVersion: String)
 
   override def sonatypeHost: Option[SonatypeHost] = Some(SonatypeHost.s01)
 
-  object test extends Tests with TestModule.Munit {
+  object test extends ScalaTests with TestModule.Munit {
     def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.0-M8")
   }
 }
 
-object itest extends Cross[ItestCross](millVersions: _*)
-class ItestCross(millVersion: String) extends MillIntegrationTestModule {
+object itest extends Cross[ItestCross](millVersions)
+trait ItestCross extends Cross.Module[String] with MillIntegrationTestModule {
 
-  override def millSourcePath = super.millSourcePath / os.up
+  def millTestVersion = crossValue
 
-  def millTestVersion = millVersion
-
-  def pluginsUnderTest = Seq(plugin(millBinaryVersion(millVersion)))
+  def pluginsUnderTest = Seq(plugin(millBinaryVersion(crossValue)))
 
   def testBase = millSourcePath / "src"
 
