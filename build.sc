@@ -21,7 +21,7 @@ val millBinaryVersions = millVersions.map(scalaNativeBinaryVersion)
 val artifactBase = "mill-scip"
 val scala213 = "2.13.11"
 val semanticdb = "4.8.1"
-val semanticdbJava = "0.8.22"
+val semanticdbJava = "0.8.23"
 
 def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
