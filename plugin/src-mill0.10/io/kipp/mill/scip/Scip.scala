@@ -329,7 +329,8 @@ object Scip extends ExternalModule {
         .map(_.toPackageInformation)
         .asJava,
       "", // BuildKind here is fine being ""
-      true // emit inverse releationships
+      true, // emit inverse releationships,
+      false // we want to fail with mill if no documents have been indexed
     )
 
     ScipSemanticdb.run(options)
