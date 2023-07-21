@@ -330,7 +330,8 @@ object Scip extends ExternalModule {
         .asJava,
       "", // BuildKind here is fine being ""
       true, // emit inverse releationships,
-      false // we want to fail with mill if no documents have been indexed
+      false, // we want to fail with mill if no documents have been indexed
+      false // we're only dealing with jar files here
     )
 
     ScipSemanticdb.run(options)
