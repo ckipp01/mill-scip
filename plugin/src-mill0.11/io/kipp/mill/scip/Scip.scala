@@ -1,22 +1,16 @@
 package io.kipp.mill.scip
 
-import com.sourcegraph.lsif_protocol.LsifToolInfo
-import com.sourcegraph.scip_semanticdb.ScipOutputFormat
-import com.sourcegraph.scip_semanticdb.ScipSemanticdb
-import com.sourcegraph.scip_semanticdb.ScipSemanticdbOptions
+import com.sourcegraph.scip_java.ScipJava
 import mill._
 import mill.api.BuildInfo
 import mill.api.Logger
-import mill.api.Result
 import mill.define.ExternalModule
-import mill.define.Task
 import mill.eval.Evaluator
 import mill.scalalib.JavaModule
 import mill.scalalib.ScalaModule
 import mill.scalalib.api.ZincWorkerUtil.isScala3
 import os.Path
 
-import scala.jdk.CollectionConverters._
 import scala.util.Properties
 
 object Scip extends ExternalModule {
@@ -32,8 +26,6 @@ object Scip extends ExternalModule {
   def generate(ev: Evaluator, output: String = "index.scip") = T.command {
 
     val log = T.ctx().log
-
-    val outputFormat = validateFormat(output)()
 
     val semanticdbVersion = ScipBuildInfo.semanticDBVersion
 
@@ -229,33 +221,8 @@ object Scip extends ExternalModule {
       }
       .map(_.path)
 
-    createScip(log, T.dest, T.workspace, classpath, output, outputFormat)
+    createScip(log, T.dest, T.workspace, classpath, output)
     T.dest / output
-  }
-
-  /** Given an output string, determine that a ScipOutputFormat can be
-    * determined from it.
-    *
-    * @param output
-    *   the given output from the user
-    * @return
-    *   the parsed output format to be generated
-    */
-  private def validateFormat(output: String): Task[ScipOutputFormat] = T.task {
-    val format = ScipOutputFormat.fromFilename(output)
-    if (format == ScipOutputFormat.UNKNOWN) {
-      val msg =
-        s"""Detected an unknown output type. You'll want to use one of the following:
-                    |
-                    | - *.lsif
-                    | - *.lsif-protobuf
-                    | - *.scip
-                    | - *.scip.ndjson
-                    |""".stripMargin
-      Result.Failure(msg)
-    } else {
-      format
-    }
   }
 
   /** After all the semanticDB has been produced we can create the SCIP index
@@ -280,19 +247,9 @@ object Scip extends ExternalModule {
       workspace: Path,
       classpath: Seq[Path],
       output: String,
-      outputFormat: ScipOutputFormat
   ): Unit = {
 
     val scipFile = dest / output
-    val reporter = new ScipReporter(log)
-    val toolInfo =
-      LsifToolInfo
-        .newBuilder()
-        .setName(
-          "scip-java"
-        ) // Make sure this stays a recognized name by src or it won't index deps. Don't use mill-scip.
-        .setVersion(ScipBuildInfo.semanticDBJavaVersion)
-        .build()
 
     log.info(s"Creating a ${output} in ${scipFile}")
 
@@ -309,30 +266,10 @@ object Scip extends ExternalModule {
       createFolders = true
     )
 
-    val classPathEntries =
-      classpath.flatMap(project => ClasspathEntry.fromPom(project.toNIO))
-
-    log.info(s"Including ${classPathEntries.size} classpath entries")
-
-    val options = new ScipSemanticdbOptions(
-      List(dest).map(_.toNIO).asJava,
-      scipFile.toNIO,
-      workspace.toNIO,
-      reporter,
-      toolInfo,
-      "java",
-      outputFormat,
-      true, // parallel -- this is fine
-      classPathEntries
-        .map(_.toPackageInformation)
-        .asJava,
-      "", // BuildKind here is fine being ""
-      true, // emit inverse releationships
-      false, // we want to fail with mill if no documents have been indexed
-      false // we're only dealing with jar files here
-    )
-
-    ScipSemanticdb.run(options)
+    val exit = ScipJava.app.run(List("index-semanticdb", "--cwd", workspace.toString, "--output", scipFile.toString, dest.toString))
+    if (exit != 0) {
+      sys.error("Failed to create SCIP index")
+    }
   }
 
   private def computeModules(ev: Evaluator) =
