@@ -17,7 +17,6 @@ import mill.scalalib.api.ZincWorkerUtil.isScala3
 import os.Path
 
 import scala.jdk.CollectionConverters._
-import scala.util.Properties
 
 object Scip extends ExternalModule {
 
@@ -182,27 +181,9 @@ object Scip extends ExternalModule {
             semanticDBJavaVersion
           )
 
-        lazy val javacModuleOptions =
-          List(
-            "-J--add-exports",
-            "-Jjdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-            "-J--add-exports",
-            "-Jjdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-            "-J--add-exports",
-            "-Jjdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
-            "-J--add-exports",
-            "-Jjdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-            "-J--add-exports",
-            "-Jjdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
-          )
-
-        val extracJavacExports =
-          if (Properties.isJavaAtLeast(17)) javacModuleOptions
-          else Seq.empty
-
         val updatedJavacOptions = javacOptions ++ Seq(
           s"-Xplugin:semanticdb -sourceroot:${T.workspace} -targetroot:${T.dest} -build-tool:mill"
-        ) ++ extracJavacExports
+        )
 
         log.info(
           s"Generating semanticdb for [${name}]"
