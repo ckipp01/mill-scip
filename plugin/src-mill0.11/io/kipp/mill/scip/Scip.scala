@@ -8,6 +8,7 @@ import mill._
 import mill.api.BuildInfo
 import mill.api.Logger
 import mill.api.Result
+import mill.define.Discover
 import mill.define.ExternalModule
 import mill.define.Task
 import mill.eval.Evaluator
@@ -319,5 +320,5 @@ object Scip extends ExternalModule {
   private def computeModules(ev: Evaluator) =
     ev.rootModule.millInternal.modules.collect { case j: JavaModule => j }
 
-  lazy val millDiscover = mill.define.Discover[this.type]
+  lazy val millDiscover: Discover[this.type] = mill.define.Discover[this.type]
 }
