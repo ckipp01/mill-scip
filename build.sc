@@ -19,7 +19,7 @@ import io.kipp.mill.ci.release.SonatypeHost
 val millVersions = Seq("0.10.15", "0.11.7")
 val millBinaryVersions = millVersions.map(scalaNativeBinaryVersion)
 val artifactBase = "mill-scip"
-val scala213 = "2.13.12"
+val scala213 = "2.13.13"
 val semanticdb = "4.8.11"
 val semanticdbJava = "0.9.9"
 
