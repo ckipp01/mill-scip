@@ -1,4 +1,4 @@
-import $ivy.`com.goyeau::mill-scalafix::0.4.0`
+import $ivy.`com.goyeau::mill-scalafix::0.4.2`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.7.1`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.10`
@@ -86,7 +86,7 @@ trait Plugin
   override def sonatypeHost: Option[SonatypeHost] = Some(SonatypeHost.s01)
 
   object test extends ScalaTests with TestModule.Munit {
-    def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.1")
+    def ivyDeps = Agg(ivy"org.scalameta::munit:1.0.4")
   }
 }
 
